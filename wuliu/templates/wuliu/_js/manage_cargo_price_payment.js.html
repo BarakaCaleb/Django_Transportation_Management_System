@@ -1,0 +1,215 @@
+{% load wuliu_extras %}
+// <script>
+$(document).ready(function() {
+  document.querySelector('[name="create_date_end"]')._duDatepicker.minDate = $('#form-search_cargo_price_payment [name="create_date_start"]').val();
+  $('#form-search_cargo_price_payment [name="create_date_end"]').on("datechanged", function() {
+    document.querySelector('[name="create_date_start"]')._duDatepicker.maxDate = $(this).val();
+  });
+  $('#form-search_cargo_price_payment [name="create_date_start"]').on("datechanged", function() {
+    document.querySelector('[name="create_date_end"]')._duDatepicker.minDate = $(this).val();
+  });
+  function get_checked_cpp_only_one() {
+    let checked_cpp = find_datatable_rows_clicked(cargo_price_payment_table);
+    if (checked_cpp.length !== 1) {
+      mdtoast_error("Please select one transfer order.");
+      return;
+    }
+    return checked_cpp[0];
+  }
+  const logged_user_id = "{{ request.session.user.id }}";
+{% if "manage_cargo_price_payment__add_edit_delete_submit"|is_logged_user_has_perm:request %}
+  $("#button_cpp_edit").click(function() {
+    let checked_cpp = get_checked_cpp_only_one();
+    if (! checked_cpp) return;
+    let checked_cpp_status = checked_cpp.find("[data-status_id]").attr("data-status_id");
+    if (checked_cpp_status != "{{ CPP_STATUSES.Created }}" && checked_cpp_status != "{{ CPP_STATUSES.Rejected }}") {
+      mdtoast_error("Transfer orders cannot be modified after submission.");
+      return;
+    }
+    if (logged_user_id != checked_cpp.find("[data-user_id]").attr("data-user_id")) {
+      mdtoast_error("You do not have permission to modify this transfer order.");
+      return;
+    }
+    let checked_cpp_id = checked_cpp.find("[data-cpp_id]").attr("data-cpp_id");
+    window.location.replace("{% url 'wuliu:edit_cargo_price_payment' %}?cpp_id=" + checked_cpp_id);
+  });
+  $("#button_cpp_delete").click(function() {
+    let checked_cpp = get_checked_cpp_only_one();
+    if (! checked_cpp) return;
+    let checked_cpp_status = checked_cpp.find("[data-status_id]").attr("data-status_id");
+    if (checked_cpp_status != "{{ CPP_STATUSES.Created }}" && checked_cpp_status != "{{ CPP_STATUSES.Rejected }}") {
+      mdtoast_error("Transfer orders cannot be deleted after submission.");
+      return;
+    }
+    if (logged_user_id != checked_cpp.find("[data-user_id]").attr("data-user_id")) {
+      mdtoast_error("You do not have permission to delete this transfer order.");
+      return;
+    }
+    confirm_dialog(
+      "Confirm Delete", "Are you sure you want to delete this transfer order?",
+      {
+        okClick: function() {
+          this.hide();
+          $.post(
+            "{% url 'wuliu:api_drop_cargo_price_payment' %}",
+            {
+              "cpp_id": checked_cpp.find("[data-cpp_id]").attr("data-cpp_id"),
+            },
+            function(data, status) {
+              if (data.code === 200) {
+                cargo_price_payment_table.row(checked_cpp).remove().draw();
+                mdtoast_success("Deleted successfully.");
+              } else {
+                alert_dialog("Delete failed: "+data.data.message);
+              }
+            }
+          )
+        }
+      }
+    );
+  });
+  $("#button_cpp_confirm_submit").click(function() {
+    let checked_cpp = get_checked_cpp_only_one();
+    if (! checked_cpp) return;
+    let checked_cpp_status = checked_cpp.find("[data-status_id]").attr("data-status_id");
+    if (checked_cpp_status != "{{ CPP_STATUSES.Created }}" && checked_cpp_status != "{{ CPP_STATUSES.Rejected }}") {
+      mdtoast_error("Transfer orders cannot be resubmitted after submission.");
+      return;
+    }
+    if (logged_user_id != checked_cpp.find("[data-user_id]").attr("data-user_id")) {
+      mdtoast_error("You do not have permission to submit this transfer order.");
+      return;
+    }
+    confirm_dialog(
+      "Confirm Submit", "Are you sure you want to submit this transfer order?",
+      {
+        okClick: function() {
+          this.hide();
+          $.post(
+            "{% url 'wuliu:api_submit_cargo_price_payment' %}",
+            {
+              "cpp_id": checked_cpp.find("[data-cpp_id]").attr("data-cpp_id"),
+            },
+            function(data, status) {
+              if (data.code === 200) {
+                checked_cpp.find("[data-status_id]").attr("data-status_id", "{{ CPP_STATUSES.Submitted }}").html("{{ CPP_STATUSES.Submitted.label }}");
+                mdtoast_success("Submitted successfully.");
+              } else {
+                alert_dialog("Submit failed: "+data.data.message);
+              }
+            }
+          )
+        }
+      }
+    );
+  });
+{% endif %}
+{% if "manage_cargo_price_payment__review_reject"|is_logged_user_has_perm:request %}
+  $("#button_cpp_confirm_review").click(function() {
+    let checked_cpp = get_checked_cpp_only_one();
+    if (! checked_cpp) return;
+    if (checked_cpp.find("[data-status_id]").attr("data-status_id") != "{{ CPP_STATUSES.Submitted }}") {
+      mdtoast_error('Only transfer orders in "Submitted" status can be reviewed.');
+      return;
+    }
+    confirm_dialog(
+      "Confirm Review", "Are you sure you want to review this transfer order? This action cannot be undone!",
+      {
+        okClick: function() {
+          this.hide();
+          $.post(
+            "{% url 'wuliu:api_review_cargo_price_payment' %}",
+            {
+              "cpp_id": checked_cpp.find("[data-cpp_id]").attr("data-cpp_id"),
+            },
+            function(data, status) {
+              if (data.code === 200) {
+                checked_cpp.find("[data-status_id]").attr("data-status_id", "{{ CPP_STATUSES.Reviewed }}").html("{{ CPP_STATUSES.Reviewed.label }}");
+                mdtoast_success("Operation successful.");
+              } else {
+                alert_dialog("Operation failed: "+data.data.message);
+              }
+            }
+          )
+        }
+      }
+    );
+  });
+  $("#button_cpp_confirm_reject").click(function() {
+    let checked_cpp = get_checked_cpp_only_one();
+    if (! checked_cpp) return;
+    if (checked_cpp.find("[data-status_id]").attr("data-status_id") != "{{ CPP_STATUSES.Submitted }}") {
+      mdtoast_error('Only transfer orders in "Submitted" status can be rejected.');
+      return;
+    }
+    confirm_dialog(
+      "Confirm Reject",
+      'Please enter the reason for rejection:' +
+      '<form class="form">' +
+        '<textarea ' +
+          'type="text" name="__reject_reason" ' +
+          'class="form-control" style="resize: vertical; height: 60px;">' +
+        '</textarea>' +
+      '</form>',
+      {
+        okClick: function() {
+          let reject_reason_text = $('[name="__reject_reason"]').val().trim();
+          if (! reject_reason_text) return;
+          this.hide();
+          $.post(
+            "{% url 'wuliu:api_reject_cargo_price_payment' %}",
+            {
+              "cpp_id": checked_cpp.find("[data-cpp_id]").attr("data-cpp_id"),
+              "reject_reason": reject_reason_text,
+            },
+            function(data, status) {
+              if (data.code === 200) {
+                checked_cpp.find("[data-status_id]").attr("data-status_id", "{{ CPP_STATUSES.Rejected }}").html("{{ CPP_STATUSES.Rejected.label }}");
+                mdtoast_success("Operation successful.");
+              } else {
+                alert_dialog("Operation failed: "+data.data.message);
+              }
+            }
+          )
+        }
+      }
+    );
+  });
+{% endif %}
+{% if "manage_cargo_price_payment__pay"|is_logged_user_has_perm:request %}
+  $("#button_cpp_confirm_pay").click(function() {
+    let checked_cpp = get_checked_cpp_only_one();
+    if (! checked_cpp) return;
+    if (checked_cpp.find("[data-status_id]").attr("data-status_id") != "{{ CPP_STATUSES.Reviewed }}") {
+      mdtoast_error('Only transfer orders in "Reviewed" status can be paid.');
+      return;
+    }
+    confirm_dialog(
+      "Confirm Payment",
+      "<p>Please make sure the payment has been successfully completed and the recipient has actually received the transfer before confirming.</p>" +
+      "<p>Once confirmed, the transfer will be counted in the financial system. This action cannot be undone!</p>",
+      {
+        okClick: function() {
+          this.hide();
+          $.post(
+            "{% url 'wuliu:api_pay_cargo_price_payment' %}",
+            {
+              "cpp_id": checked_cpp.find("[data-cpp_id]").attr("data-cpp_id"),
+            },
+            function(data, status) {
+              if (data.code === 200) {
+                checked_cpp.find("[data-status_id]").attr("data-status_id", "{{ CPP_STATUSES.Paid }}").html("{{ CPP_STATUSES.Paid.label }}");
+                checked_cpp.find("[data-key='cpp_settle_accounts_time']").attr("data-order", data.data.cpp_settle_accounts_time_timestamp).html(data.data.cpp_settle_accounts_time);
+                mdtoast_success("Operation successful.");
+              } else {
+                alert_dialog("Operation failed: "+data.data.message);
+              }
+            }
+          )
+        }
+      }
+    );
+  });
+{% endif %}
+});
+// </script>

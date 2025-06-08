@@ -1,0 +1,249 @@
+{% load wuliu_extras %}
+// <script>
+$(document).ready(function() {
+  document.querySelector('[name="payment_date_end"]')._duDatepicker.minDate = $('#form-search_department_payment [name="payment_date_start"]').val();
+  $('#form-search_department_payment [name="payment_date_end"]').on("datechanged", function() {
+    document.querySelector('[name="payment_date_start"]')._duDatepicker.maxDate = $(this).val();
+  });
+  $('#form-search_department_payment [name="payment_date_start"]').on("datechanged", function() {
+    document.querySelector('[name="payment_date_end"]')._duDatepicker.minDate = $(this).val();
+  });
+  const user_dept_id = "{{ request.session.user.department_id }}";
+  function get_checked_dp_all() {
+    let checked_dp = find_datatable_rows_clicked(dp_search_result_table);
+    if (checked_dp.length === 0) {
+      mdtoast_error("Please select at least one payment order.");
+      return;
+    }
+    return checked_dp;
+  }
+  function get_checked_dp_only_one() {
+    let checked_dp = find_datatable_rows_clicked(dp_search_result_table);
+    if (checked_dp.length !== 1) {
+      mdtoast_error("Please select one payment order.");
+      return;
+    }
+    return checked_dp[0];
+  }
+  $("#button_dp_edit_remark").click(function() {
+    let checked_dp = get_checked_dp_only_one();
+    if (! checked_dp) return;
+    if (checked_dp.find("[data-status_id]").attr("data-status_id") == "{{ DP_STATUSES.Settled.value }}") {
+      mdtoast_error("Remarks cannot be modified for settled payment orders.");
+      return;
+    }
+    let remark_type;
+    if (user_dept_id == checked_dp.find("[data-src_dept_id]").attr("data-src_dept_id")) {
+      remark_type = "src";
+    } else if (user_dept_id == checked_dp.find("[data-dst_dept_id]").attr("data-dst_dept_id")) {
+      remark_type = "dst";
+    } else {
+      mdtoast_error("You do not have permission to modify remarks.");
+      return;
+    }
+    confirm_dialog(
+      "Modify " + (remark_type === "src" ? "Payment Department" : "Receiving Department") + " Remark",
+      'Please enter: ' +
+      '<form class="form mt-2">' +
+        '<textarea ' +
+          'type="text" name="__remark" ' +
+          'class="form-control" style="resize: vertical; height: 60px;">' +
+          checked_dp.find('[data-key="dp_'+remark_type+'_remark"]').text() +
+        '</textarea>' +
+      '</form>',
+      {
+        okClick: function() {
+          let remark_text = $('[name="__remark"]').val().trim();
+          if (! remark_text) return;
+          this.hide();
+          $.post(
+            "{% url 'wuliu:api_modify_remark_department_payment' %}",
+            {
+              "dp_id": checked_dp.find("[data-dp_id]").attr("data-dp_id"),
+              "remark_dept_type": remark_type,
+              "remark_text": remark_text,
+            },
+            function(data, status) {
+              if (data.code === 200) {
+                checked_dp.find('[data-key="dp_'+remark_type+'_remark"]').html(remark_text);
+                mdtoast_success("Remark modified successfully.");
+              } else {
+                alert_dialog("Failed to modify remark: "+data.data.message);
+              }
+            }
+          )
+        }
+      }
+    );
+  });
+{% if "manage_department_payment__pay"|is_logged_user_has_perm:request %}
+  $("#button_dp_confirm_pay").click(function() {
+    let checked_dp = get_checked_dp_all();
+    if (! checked_dp) return;
+    for (let jq_obj of checked_dp.toArray()) {
+      if (jq_obj.find("[data-status_id]").attr("data-status_id") != "{{ DP_STATUSES.Reviewed.value }}") {
+        mdtoast_error('Only "Reviewed" payment orders can be confirmed for payment.');
+        return;
+      }
+      if (jq_obj.find("[data-src_dept_id]").attr("data-src_dept_id") != user_dept_id) {
+        mdtoast_error("You can only confirm payment for payment orders of the current department.");
+        return;
+      }
+    }
+    confirm_dialog(
+      "Confirm Payment",
+      "Please make sure the payment has been successfully completed and the receiving department has indeed received the transfer before confirming.",
+      {
+        okClick: function() {
+          let checked_dp_ids = checked_dp.map(function(jq_obj) {
+            return jq_obj.find("[data-dp_id]").attr("data-dp_id");
+          });
+          this.hide();
+          $.post(
+            "{% url 'wuliu:api_pay_department_payment' %}",
+            {
+              "dp_ids": checked_dp_ids.join(","),
+            },
+            function(data, status) {
+              if (data.code === 200) {
+                checked_dp.each(function(jq_obj) {
+                  jq_obj.find("[data-status_id]").attr("data-status_id", "{{ DP_STATUSES.Paid }}").html("{{ DP_STATUSES.Paid.label }}");
+                });
+                mdtoast_success("Submitted successfully.");
+              } else {
+                alert_dialog("Submission failed: "+data.data.message);
+              }
+            }
+          )
+        }
+      }
+    );
+  });
+{% endif %}
+{% if "manage_department_payment__add_delete"|is_logged_user_has_perm:request %}
+  $("#button_dp_delete").click(function() {
+    let checked_dp = get_checked_dp_all();
+    if (! checked_dp) return;
+    for (let jq_obj of checked_dp.toArray()) {
+      if (jq_obj.find("[data-status_id]").attr("data-status_id") != "{{ DP_STATUSES.Created.value }}") {
+        mdtoast_error("Only payment orders that have not been reviewed can be deleted.");
+        return;
+      }
+    }
+    confirm_dialog(
+      "Delete Payment Order",
+      "Are you sure you want to delete these payment orders?",
+      {
+        okClick: function() {
+          let checked_dp_ids = checked_dp.map(function(jq_obj) {
+            return jq_obj.find("[data-dp_id]").attr("data-dp_id");
+          });
+          this.hide();
+          $.post(
+            "{% url 'wuliu:api_drop_department_payment' %}",
+            {
+              "dp_ids": checked_dp_ids.join(","),
+            },
+            function(data, status) {
+              if (data.code === 200) {
+                checked_dp.each(function(row) {
+                  dp_search_result_table.row(row).remove();
+                });
+                dp_search_result_table.draw();
+                mdtoast_success("Deleted successfully.");
+              } else {
+                alert_dialog("Deletion failed: "+data.data.message);
+              }
+            }
+          )
+        }
+      }
+    );
+  });
+{% endif %}
+{% if "manage_department_payment__review"|is_logged_user_has_perm:request %}
+  $("#button_dp_confirm_review").click(function() {
+    let checked_dp = get_checked_dp_all();
+    if (! checked_dp) return;
+    for (let jq_obj of checked_dp.toArray()) {
+      if (jq_obj.find("[data-status_id]").attr("data-status_id") != "{{ DP_STATUSES.Created.value }}") {
+        mdtoast_error("Only payment orders that have not been reviewed can be reviewed.");
+        return;
+      }
+    }
+    confirm_dialog(
+      "Review Payment Order",
+      "Are you sure you want to review these payment orders? This operation cannot be undone!",
+      {
+        okClick: function() {
+          let checked_dp_ids = checked_dp.map(function(jq_obj) {
+            return jq_obj.find("[data-dp_id]").attr("data-dp_id");
+          });
+          this.hide();
+          $.post(
+            "{% url 'wuliu:api_review_department_payment' %}",
+            {
+              "dp_ids": checked_dp_ids.join(","),
+            },
+            function(data, status) {
+              if (data.code === 200) {
+                checked_dp.each(function(jq_obj) {
+                  jq_obj.find("[data-status_id]").attr("data-status_id", "{{ DP_STATUSES.Reviewed }}").html("{{ DP_STATUSES.Reviewed.label }}");
+                });
+                mdtoast_success("Reviewed successfully.");
+              } else {
+                alert_dialog("Review failed: "+data.data.message);
+              }
+            }
+          )
+        }
+      }
+    );
+  });
+{% endif %}
+{% if "manage_department_payment__settle"|is_logged_user_has_perm:request %}
+  $("#button_dp_confirm_settle_accounts").click(function() {
+    let checked_dp = get_checked_dp_all();
+    if (! checked_dp) return;
+
+    for (let jq_obj of checked_dp.toArray()) {
+      if (jq_obj.find("[data-status_id]").attr("data-status_id") != "{{ DP_STATUSES.Paid.value }}") {
+        mdtoast_error('Only "Paid" payment orders can be settled.');
+        return;
+      }
+    }
+    confirm_dialog(
+      "Confirm Settlement",
+      "<p>Please make sure you have indeed received the transfer before confirming settlement,</p>" +
+      "<p>Once confirmed, the transfer will be counted into the financial system,</p>" +
+      "<p>This operation cannot be undone!</p>",
+      {
+        okClick: function() {
+          let checked_dp_ids = checked_dp.map(function(jq_obj) {
+            return jq_obj.find("[data-dp_id]").attr("data-dp_id");
+          });
+          this.hide();
+          $.post(
+            "{% url 'wuliu:api_settle_accounts_department_payment' %}",
+            {
+              "dp_ids": checked_dp_ids.join(","),
+            },
+            function(data, status) {
+              if (data.code === 200) {
+                checked_dp.each(function(jq_obj) {
+                  jq_obj.find("[data-status_id]").attr("data-status_id", "{{ DP_STATUSES.Settled }}").html("{{ DP_STATUSES.Settled.label }}");
+                  jq_obj.find('[data-key="dp_settle_accounts_time"]').attr("data-order", data.data.dp_settle_accounts_time_timestamp).html(data.data.dp_settle_accounts_time);
+                });
+                mdtoast_success("Submitted successfully.");
+              } else {
+                alert_dialog("Submission failed: "+data.data.message);
+              }
+            }
+          )
+        }
+      }
+    );
+  });
+{% endif %}
+});
+// </script>

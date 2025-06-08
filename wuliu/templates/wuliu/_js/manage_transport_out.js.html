@@ -1,0 +1,97 @@
+// <script>
+$(document).ready(function() {
+  document.querySelector('[name="create_date_end"]')._duDatepicker.minDate = $('#form-search_transport_out [name="create_date_start"]').val();
+  $('#form-search_transport_out [name="create_date_end"]').on("datechanged", function() {
+    document.querySelector('[name="create_date_start"]')._duDatepicker.maxDate = $(this).val();
+  });
+  $('#form-search_transport_out [name="create_date_start"]').on("datechanged", function() {
+    document.querySelector('[name="create_date_end"]')._duDatepicker.minDate = $(this).val();
+  });
+  $("#button_to_edit").click(function() {
+    let checked_transport_out = find_datatable_rows_clicked(to_search_result_table);
+    if (checked_transport_out.length !== 1) {
+      mdtoast_error("Please select one trip.");
+      return;
+    }
+    checked_transport_out = checked_transport_out[0];
+    let checked_transport_out_id = checked_transport_out.find("[data-to_id]").attr("data-to_id");
+    let td_status = checked_transport_out.find("[data-status_id]");
+    if (parseInt(td_status.attr("data-status_id")) > "{{ TO_STATUSES.Ready }}") {
+      mdtoast_error("Trips that have departed cannot be modified.");
+      return;
+    }
+    window.location.replace("{% url 'wuliu:edit_transport_out' %}?transport_out_id=" + checked_transport_out_id);
+  });
+  $("#button_to_drop").click(function() {
+    let checked_transport_out = find_datatable_rows_clicked(to_search_result_table);
+    if (checked_transport_out.length !== 1) {
+      mdtoast_error("Please select one trip.");
+      return;
+    }
+    checked_transport_out = checked_transport_out[0];
+    let checked_transport_out_id = checked_transport_out.find("[data-to_id]").attr("data-to_id");
+    let td_status = checked_transport_out.find("[data-status_id]");
+    if (parseInt(td_status.attr("data-status_id")) > "{{ TO_STATUSES.Ready }}") {
+      mdtoast_error("Trips that have departed cannot be deleted.");
+      return;
+    }
+    confirm_dialog(
+      "Delete", "Are you sure you want to delete this trip?", {
+        okClick: function() {
+          this.hide();
+          $.post(
+            "{% url 'wuliu:api_drop_transport_out' %}",
+            {
+              "drop_transport_out_id": checked_transport_out_id,
+            },
+            function(data, status) {
+              if (data.code === 200) {
+                mdtoast_success("Trip deleted successfully.");
+                to_search_result_table.row(checked_transport_out).remove().draw();
+              } else {
+                mdtoast_error("Trip deletion failed: "+data.data.message);
+              }
+            }
+          )
+        }
+      }
+    );
+  });
+  $("#button_to_start").click(function() {
+    let checked_transport_out = find_datatable_rows_clicked(to_search_result_table);
+    if (checked_transport_out.length !== 1) {
+      mdtoast_error("Please select one trip.");
+      return;
+    }
+    checked_transport_out = checked_transport_out[0];
+    let checked_transport_out_id = checked_transport_out.find("[data-to_id]").attr("data-to_id");
+    let td_status = checked_transport_out.find("[data-status_id]");
+    if (parseInt(td_status.attr("data-status_id")) > "{{ TO_STATUSES.Ready }}") {
+      mdtoast_error("This trip has already departed.");
+      return;
+    }
+    confirm_dialog(
+      "Depart", "Are you sure you want to depart?", {
+        okClick: function() {
+          this.hide();
+          $.post(
+            "{% url 'wuliu:api_start_transport_out' %}",
+            {
+              "start_transport_out_id": checked_transport_out_id,
+            },
+            function(data, status) {
+              if (data.code === 200) {
+                mdtoast_success("Departure successful.");
+                checked_transport_out.find("[data-status_id]").attr("data-status_id", "{{ TO_STATUSES.OnTheWay }}").html("{{ TO_STATUSES.OnTheWay.label }}");
+                checked_transport_out.find("td[data-key='to_start_time']").attr("data-order", data.data.start_time_timestamp).html(data.data.start_time);
+              } else {
+                alert_dialog("Departure failed: "+data.data.message);
+              }
+            }
+          )
+        }
+      }
+    );
+  });
+});
+// </script>

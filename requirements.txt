@@ -1,0 +1,5 @@
+django
+mysqlclient
+openpyxl
+django-debug-toolbar  # Optional
+django-extensions     # Optional

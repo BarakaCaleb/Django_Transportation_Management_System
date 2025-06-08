@@ -1,0 +1,94 @@
+{% extends "wuliu/_layout.html" %}
+{% block title %}Confirm Return{% endblock %}
+{% block header_title %}Confirm Return{% endblock %}
+{% block content %}
+    <div class="accordion col-12">
+            <div class="card bg-light shadow">
+                    <div class="card-header">
+                            <h3 class="card-title">Waybill Number: {{ waybill.get_full_id }}</h3>
+                    </div>
+                    <div class="card-body">
+                            <div class="row">
+                                    <div class="col-md-3">
+                                            Sender: <code>{{ waybill.src_customer_name }}</code>
+                                    </div>
+                                    <div class="col-md-3">
+                                            Sender Phone: <code>{{ waybill.src_customer_phone }}</code>
+                                    </div>
+                                    <div class="col-md-3">
+                                            Receiver: <code>{{ waybill.dst_customer_name }}</code>
+                                    </div>
+                                    <div class="col-md-3">
+                                            Receiver Phone: <code>{{ waybill.dst_customer_phone }}</code>
+                                    </div>
+                                    <div class="col-md-3">
+                                            Sending Department: <code>{{ waybill.src_department.name }}</code>
+                                    </div>
+                                    <div class="col-md-3">
+                                            Cargo Name: <code>{{ waybill.cargo_name }}</code>
+                                    </div>
+                                    <div class="col-md-3">
+                                            Collection on Delivery: <code>{{ waybill.cargo_price }}</code>
+                                    </div>
+                                    <div class="col-md-3">
+                                            Quantity: <code>{{ waybill.cargo_num }}</code>
+                                    </div>
+                                    <div class="col-md-3">
+                                            Total Volume: <code>{{ waybill.cargo_volume | floatformat:2 }}</code>
+                                    </div>
+                                    <div class="col-md-3">
+                                            Total Weight: <code>{{ waybill.cargo_weight | floatformat }}</code>
+                                    </div>
+                                    <div class="col-md-3">
+                                            Freight: <code>{{ waybill.fee }}</code>
+                                    </div>
+                                    <div class="col-md-3">
+                                            Settlement Method: <code>{{ waybill.fee_type }}</code>
+                                    </div>
+                                    <div class="col-md-6">
+                                            Customer Remark: <code>{{ waybill.customer_remark | default:"None" }}</code>
+                                    </div>
+                                    <div class="col-md-6">
+                                            Company Remark: <code>{{ waybill.company_remark | default:"None" }}</code>
+                                    </div>
+                            </div>
+                    </div>
+            </div>
+    </div>
+    <form id="form-confirm_return_waybill" action="{% url 'wuliu:confirm_return_waybill' %}" class="form col-12" method="post">
+            {% csrf_token %}
+            <input type="number" name="return_waybill_id" value="{{ waybill.id }}" hidden required/>
+            <div class="form-group row">
+                    <label class="col-md-2 col-form-label label-required">Please enter the reason for return:</label>
+                    <div class="col-md-8">
+                            <input class="form-control" type="text" name="return_reason" required/>
+                    </div>
+                    <div class="col-md-2">
+                            <button class="btn btn-primary" id="confirm_return_waybill_submit">Confirm Return</button>
+                    </div>
+            </div>
+    </form>
+    <script>
+$(document).ready(function() {
+    $("#confirm_return_waybill_submit").click(function(e) {
+        e.preventDefault();
+        if (! $('#form-confirm_return_waybill [name="return_waybill_id"]').val()) {
+            mdtoast_error("Form error! Please refresh the page and try again!");
+            return;
+        }
+        if (! $('#form-confirm_return_waybill [name="return_reason"]').val().trim()) {
+            mdtoast_error("Please carefully fill in the reason for return!");
+            return;
+        }
+        confirm_dialog(
+            "Confirm Return", "The return operation cannot be undone! Are you sure you want to return?", {
+                okClick: function() {
+                    this.hide();
+                    $('#form-confirm_return_waybill').submit();
+                }
+            }
+        );
+    });
+});
+    </script>
+{% endblock %}

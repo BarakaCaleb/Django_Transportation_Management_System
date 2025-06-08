@@ -1,0 +1,40 @@
+{% extends "wuliu/_layout.html" %}
+{% load wuliu_extras %}
+{% block title %}Department Payment Details{% endblock %}
+{% block header_title %}Department Payment Details{% endblock %}
+    {% block content %}
+        <form class="form col-12">
+        <fieldset>
+            <legend>Basic Information</legend>
+            <div class="row">
+            {% show_form_input_field form.id_ "" "col-12 col-md" %}
+            {% show_form_input_field form.RO_create_time "" "col-6 col-md" %}
+            {% show_form_input_field form.payment_date "" "col-6 col-md" %}
+            {% show_form_input_field form.settle_accounts_time "" "col-6 col-md" %}
+            {% show_form_input_field form.RO_status "" "col-6 col-md" %}
+            </div>
+            <div class="row mb-2">
+            {% show_form_input_field form.RO_src_department "" "col-6 col-md-3" %}
+            {% show_form_input_field form.RO_dst_department "" "col-6 col-md-3" %}
+            </div>
+            <div class="row mb-2">
+            {% show_form_input_field form.src_remark "" "col-12 col-md-6" %}
+            {% show_form_input_field form.dst_remark "" "col-12 col-md-6" %}
+            </div>
+            <hr>
+            <legend>Fee List</legend>
+        </fieldset>
+        </form>
+        <blockquote class="col-12">
+        <h1>Receivable Amount</h1>
+        <p>
+            Freight Income (Paid Now): <code>{{ dp_dic.total_fee_now }}</code> yuan;
+            Freight Income (Paid on Delivery): <code>{{ dp_dic.total_fee_sign_for }}</code> yuan;
+            Collected Cargo Payment Income: <code>{{ dp_dic.total_cargo_price }}</code> yuan;
+            Total: <code>{{ dp_dic.final_total_fee }}</code> yuan.
+        </p>
+        </blockquote>
+        <div class="col-12">
+        {% show_waybill_table waybills_info_list "department_payment_waybill" False True dp_dic.src_department.id %}
+        </div>
+    {% endblock %}

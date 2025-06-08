@@ -1,0 +1,329 @@
+{% extends "wuliu/_layout.html" %}
+{% load static %}
+{% load utils_extras %}
+{% block title %}Welcome Page{% endblock %}
+{% block header_title %}Welcome Page{% endblock %}
+{% block header_subtitle %}Login Time: {{ request.session.user.logged_in_time }}{% endblock %}
+  {% block head_append_js %}
+    <script src="{% static 'AdminLTE-3.0.5/plugins/chart.js/Chart.min.js' %}"></script>
+    <script src="{% url 'wuliu:welcome_js' %}"></script>
+  {% endblock %}
+          {% block content %}
+            <div class="col-12"><div class="row">
+              <div class="col-lg-3 col-6">
+                <div class="small-box bg-info">
+                  <div class="inner">
+                    <h3>{{ data_dic.today.waybill }}</h3>
+                    <p>Today's New Waybills</p>
+                  </div>
+                  <div class="icon">
+                    <i class="fas fa-notes-medical"></i>
+                  </div>
+                  <a href="javascript:" id="today_waybill" class="small-box-footer">Details <i class="fas fa-arrow-circle-right"></i></a>
+                </div>
+              </div>
+              <div class="col-lg-3 col-6">
+                <div class="small-box bg-success">
+                  <div class="inner">
+                    <h3>{{ data_dic.today.transport_out }}</h3>
+                    <p>Today's Dispatched Waybills</p>
+                  </div>
+                  <div class="icon">
+                    <i class="fas fa-truck"></i>
+                  </div>
+                  <a href="javascript:" id="today_transport_out" class="small-box-footer">Details <i class="fas fa-arrow-circle-right"></i></a>
+                </div>
+              </div>
+              <div class="col-lg-3 col-6">
+                <div class="small-box bg-warning">
+                  <div class="inner">
+                    <h3>{{ data_dic.today.arrival }}</h3>
+                    <p>Today's Arrived Waybills</p>
+                  </div>
+                  <div class="icon">
+                    <i class="fas fa-truck-loading"></i>
+                  </div>
+                  <a href="javascript:" id="today_arrival" class="small-box-footer">Details <i class="fas fa-arrow-circle-right"></i></a>
+                </div>
+              </div>
+              <div class="col-lg-3 col-6">
+                <div class="small-box bg-danger">
+                  <div class="inner">
+                    <h3>{{ data_dic.today.sign_for }}</h3>
+                    <p>Today's Signed Waybills</p>
+                  </div>
+                  <div class="icon">
+                    <i class="fas fa-box-open"></i>
+                  </div>
+                  <a href="javascript:" id="today_sign_for" class="small-box-footer">Details <i class="fas fa-arrow-circle-right"></i></a>
+                </div>
+              </div>
+            </div></div>
+
+            <div class="col-12"><div class="row">
+              <div class="col-12 col-sm-6 col-md-3">
+                <a href="javascript:" id="wait_waybill" class="info-box mb-3 shadow">
+                  <span class="info-box-icon bg-info elevation-1"><i class="fas fa-folder-open"></i></span>
+                  <div class="info-box-content">
+                    <span class="info-box-text text-dark">Pending Orders</span>
+                    <span class="info-box-number text-dark">{{ data_dic.wait.waybill }}</span>
+                  </div>
+                </a>
+              </div>
+              <div class="col-12 col-sm-6 col-md-3">
+                <a href="javascript:" id="wait_transport_out" class="info-box mb-3 shadow">
+                  <span class="info-box-icon bg-success elevation-1"><i class="fas fa-truck-pickup"></i></span>
+                  <div class="info-box-content">
+                    <span class="info-box-text text-dark">Pending Dispatch Waybills</span>
+                    <span class="info-box-number text-dark">{{ data_dic.wait.transport_out }}</span>
+                  </div>
+                </a>
+              </div>
+              <div class="clearfix hidden-md-up"></div>
+              <div class="col-12 col-sm-6 col-md-3">
+                <a href="javascript:" id="wait_arrival" class="info-box mb-3 shadow">
+                  <span class="info-box-icon bg-warning elevation-1"><i class="fas fa-car"></i></span>
+                  <div class="info-box-content">
+                    <span class="info-box-text text-dark">Pending Arrival Confirmation</span>
+                    <span class="info-box-number text-dark">{{ data_dic.wait.arrival }}</span>
+                  </div>
+                </a>
+              </div>
+              <div class="col-12 col-sm-6 col-md-3">
+                <a href="javascript:" id="wait_sign_for" class="info-box mb-3 shadow">
+                  <span class="info-box-icon bg-danger elevation-1"><i class="fas fa-box"></i></span>
+                  <div class="info-box-content">
+                    <span class="info-box-text text-dark">Pending Signed Waybills</span>
+                    <span class="info-box-number text-dark">{{ data_dic.wait.sign_for }}</span>
+                  </div>
+                </a>
+              </div>
+            </div></div>
+
+            <div class="col-12"><div class="row">
+              <div class="col-12 col-md-6">
+                <div class="card shadow">
+                  <div class="card-header border-0">
+                    <h3 class="card-title">Waybill Volume Trend</h3>
+                  </div>
+                  <div class="card-body">
+                    <div class="d-flex">
+                      <p class="d-flex flex-column">
+                        <span class="text-bold text-lg">{{ waybill_num_this_week_total }} Orders</span>
+                        <span>New Waybills in the Past 7 Days</span>
+                      </p>
+                      <p class="ml-auto d-flex flex-column text-right">
+                      {% if waybill_num_change_rate_percentage >= 0 %}
+                        <span class="text-success">
+                          <i class="fas fa-arrow-up"></i> {{ waybill_num_change_rate_percentage | abs | floatformat }}%
+                        </span>
+                      {% else %}
+                        <span class="text-danger">
+                          <i class="fas fa-arrow-down"></i> {{ waybill_num_change_rate_percentage | abs | floatformat }}%
+                        </span>
+                      {% endif %}
+                        <span class="text-muted">Compared to 7 Days Ago</span>
+                      </p>
+                    </div>
+
+                    <div class="position-relative mb-4">
+                      <canvas id="waybill-num-chart" height="200"></canvas>
+                    </div>
+
+                    <div class="d-flex flex-row justify-content-end">
+                      <span class="mr-2">
+                        <i class="fas fa-square text-primary"></i> This Week
+                      </span>
+                      <span>
+                        <i class="fas fa-square text-gray"></i> Last Week
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12 col-md-6">
+                <div class="card shadow">
+                  <div class="card-header border-0">
+                    <h3 class="card-title">Freight Income Trend</h3>
+                  </div>
+                  <div class="card-body">
+                    <div class="d-flex">
+                      <p class="d-flex flex-column">
+                        <span class="text-bold text-lg">{{ waybill_fee_this_week_total }} Yuan</span>
+                        <span>Freight Income in the Past 7 Days</span>
+                      </p>
+                      <p class="ml-auto d-flex flex-column text-right">
+                      {% if waybill_fee_change_rate_percentage >= 0 %}
+                        <span class="text-success">
+                          <i class="fas fa-arrow-up"></i> {{ waybill_fee_change_rate_percentage | abs | floatformat }}%
+                        </span>
+                      {% else %}
+                        <span class="text-danger">
+                          <i class="fas fa-arrow-down"></i> {{ waybill_fee_change_rate_percentage | abs | floatformat }}%
+                        </span>
+                      {% endif %}
+                        <span class="text-muted">Compared to 7 Days Ago</span>
+                      </p>
+                    </div>
+
+                    <div class="position-relative mb-4">
+                      <canvas id="waybill-fee-chart" height="200"></canvas>
+                    </div>
+
+                    <div class="d-flex flex-row justify-content-end">
+                      <span class="mr-2">
+                        <i class="fas fa-square text-primary"></i> This Week
+                      </span>
+                      <span>
+                        <i class="fas fa-square text-gray"></i> Last Week
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div></div>
+            {{ waybill_num_this_week | json_script:"waybill_num_this_week_data" }}
+            {{ waybill_num_last_week | json_script:"waybill_num_last_week_data" }}
+            {{ waybill_fee_this_week | json_script:"waybill_fee_this_week_data" }}
+            {{ waybill_fee_last_week | json_script:"waybill_fee_last_week_data" }}
+            {{ weekdays              | json_script:"weekdays_data" }}
+            <script>
+$(function() {
+  'use strict'
+
+  const ticksStyle = {
+    fontColor: "#495057",
+    fontStyle: "bold"
+  }
+
+  const mode = "index";
+  const intersect = false;
+
+  new Chart($('#waybill-num-chart'), {
+    data: {
+      labels : JSON.parse($('#weekdays_data').text()),
+      datasets: [
+        {
+          type                : 'line',
+          data                : JSON.parse($('#waybill_num_this_week_data').text()),
+          backgroundColor     : 'transparent',
+          borderColor         : '#007bff',
+          pointBorderColor    : '#007bff',
+          pointBackgroundColor: '#007bff',
+          fill                : false
+        },
+        {
+          type                : 'line',
+          data                : JSON.parse($('#waybill_num_last_week_data').text()),
+          backgroundColor     : 'transparent',
+          borderColor         : '#ced4da',
+          pointBorderColor    : '#ced4da',
+          pointBackgroundColor: '#ced4da',
+          fill                : false
+        }
+      ]
+    },
+    options: {
+      maintainAspectRatio: false,
+      tooltips: {
+        mode     : mode,
+        intersect: intersect
+      },
+      hover: {
+        mode     : mode,
+        intersect: intersect
+      },
+      legend: {
+        display: false
+      },
+      scales: {
+        yAxes: [{
+          // display: false,
+          gridLines: {
+            display      : true,
+            lineWidth    : '4px',
+            color        : 'rgba(0, 0, 0, .2)',
+            zeroLineColor: 'transparent'
+          },
+          ticks: $.extend({
+            beginAtZero : true,
+            suggestedMax: {{ waybill_num_this_week | add:waybill_num_last_week | max }}
+          }, ticksStyle)
+        }],
+        xAxes: [{
+          display: true,
+          gridLines: {
+            display: false
+          },
+          ticks: ticksStyle
+        }]
+      }
+    }
+  });
+
+  new Chart($('#waybill-fee-chart'), {
+    data: {
+      labels : JSON.parse($('#weekdays_data').text()),
+      datasets: [
+        {
+          type                : 'line',
+          data                : JSON.parse($('#waybill_fee_this_week_data').text()),
+          backgroundColor     : 'transparent',
+          borderColor         : '#007bff',
+          pointBorderColor    : '#007bff',
+          pointBackgroundColor: '#007bff',
+          fill                : false
+        },
+        {
+          type                : 'line',
+          data                : JSON.parse($('#waybill_fee_last_week_data').text()),
+          backgroundColor     : 'transparent',
+          borderColor         : '#ced4da',
+          pointBorderColor    : '#ced4da',
+          pointBackgroundColor: '#ced4da',
+          fill                : false
+        }
+      ]
+    },
+    options: {
+      maintainAspectRatio: false,
+      tooltips: {
+        mode     : mode,
+        intersect: intersect
+      },
+      hover: {
+        mode     : mode,
+        intersect: intersect
+      },
+      legend: {
+        display: false
+      },
+      scales: {
+        yAxes: [{
+          // display: false,
+          gridLines: {
+            display      : true,
+            lineWidth    : '4px',
+            color        : 'rgba(0, 0, 0, .2)',
+            zeroLineColor: 'transparent'
+          },
+          ticks: $.extend({
+            beginAtZero : true,
+            suggestedMax: {{ waybill_fee_this_week | add:waybill_fee_last_week | max }}
+          }, ticksStyle)
+        }],
+        xAxes: [{
+          display: true,
+          gridLines: {
+            display: false
+          },
+          ticks: ticksStyle
+        }]
+      }
+    }
+  });
+
+})
+
+            </script>
+          {% endblock %}

@@ -1,0 +1,115 @@
+{% extends "wuliu/_layout.html" %}
+{% load wuliu_extras %}
+{% block head_append_js %}
+  <script src="{% url 'wuliu:edit_waybill_js' %}"></script>
+{% endblock %}
+          {% block content %}
+              {% block content_header %}{% endblock %}
+            <form action="{% block edit_form_action %}{% endblock %}" id="form-edit_waybill" class="form col-12" method="post">
+                <fieldset>
+                  {# For security reasons, the waybill detail page does not provide csrf_token #}
+                  {% if not detail_view %}
+                    {% csrf_token %}
+                  {% endif %}
+                    <legend class="row">Basic Information</legend>
+                  {% if form.id_ %}
+                    <div class="row">
+                        {% show_form_input_field form.id_ "" "col-6 col-md-3" %}
+                        {% show_form_input_field form.id "" "" %}
+                      {% if detail_view %}
+                        {% show_form_input_field form.RO_create_time "" "col-6 col-md-3" %}
+                        {% show_form_input_field form.RO_status "" "col-6 col-md-2" %}
+                      {% endif %}
+                    </div>
+                  {% endif %}
+                    <div class="row mb-2">
+                      {% if detail_view %}
+                        {% show_form_input_field form.RO_src_department "" "col-6 col-md-3" %}
+                        {% show_form_input_field form.RO_dst_department "" "col-6 col-md-3" %}
+                      {% else %}
+                        {% show_form_input_field form.src_department "" "col-6 col-md-3" %}
+                        {% show_form_input_field form.dst_department "" "col-6 col-md-3" %}
+                      {% endif %}
+                    </div>
+                    <div class="row">
+                        <div class="col-12 col-md-6"><div class="callout callout-info shadow">
+                            <div class="row mb-2">
+                                <h3 class="card-title"><i class="fas fa-map-marker-alt mr-2"></i>Sender Information</h3>
+                            </div>
+                            <div class="row">
+                              {% if detail_view %}
+                                {% show_form_input_field form.RO_src_customer "Customer" "col-12" %}
+                              {% else %}
+                                {% show_form_input_field form.src_customer "Select Customer" "col-12" %}
+                              {% endif %}
+                                {% show_form_input_field form.src_customer_name "Name" "col-5" %}
+                                {% show_form_input_field form.src_customer_phone "Phone" "col-7" %}
+                                {% show_form_input_field form.src_customer_credential_num "ID Number" "col-md-5" %}
+                                {% show_form_input_field form.src_customer_address "Detailed Address" "col-md-7" %}
+                            </div>
+                        </div></div>
+                        <div class="col-12 col-md-6"><div class="callout callout-success shadow">
+                            <div class="row mb-2">
+                                <h3 class="card-title"><i class="fas fa-map-marker-alt mr-2"></i>Receiver Information</h3>
+                            </div>
+                            <div class="row">
+                              {% if detail_view %}
+                                {% show_form_input_field form.RO_dst_customer "Customer" "col-12" %}
+                              {% else %}
+                                {% show_form_input_field form.dst_customer "Select Customer" "col-12" %}
+                              {% endif %}
+                                {% show_form_input_field form.dst_customer_name "Name" "col-5" %}
+                                {% show_form_input_field form.dst_customer_phone "Phone" "col-7" %}
+                                {% show_form_input_field form.dst_customer_credential_num "ID Number" "col-md-5" %}
+                                {% show_form_input_field form.dst_customer_address "Detailed Address" "col-md-7" %}
+                            </div>
+                        </div></div>
+                    </div>
+                    <legend class="row">Cargo Information</legend>
+                    <div class="row">
+                        {% show_form_input_field form.cargo_name "" "col-4 col-md" %}
+                        {% show_form_input_field form.cargo_num "" "col-4 col-md" %}
+                        {% show_form_input_field form.cargo_volume "Total Volume (m³)" "col-4 col-md" %}
+                        {% show_form_input_field form.cargo_weight "Total Weight (Kg)" "col-4 col-md" %}
+                        {% show_form_input_field form.cargo_price "Cargo Payment (Yuan)" "col-4 col-md" %}
+                        {% show_form_input_field form.cargo_handling_fee "Handling Fee (Yuan)" "col-4 col-md" %}
+                    </div>
+                    <legend class="row">Freight</legend>
+                  {# The standard freight is not displayed on the waybill detail page #}
+                  {% if not detail_view %}
+                    <div class="row">
+                        <span class="ml-2 my-1">Standard Freight: <code id="_fee_standard">0</code> Yuan</span>
+                    </div>
+                  {% endif %}
+                    <div class="row">
+                        {% show_form_input_field form.fee "Freight (Yuan)" "col-6 col-md-2" %}
+                      {% if detail_view %}
+                        {% show_form_input_field form.RO_fee_type "Payment Method" "col-6 col-md-2" %}
+                      {% else %}
+                        {% show_form_input_field form.fee_type "Payment Method" "col-6 col-md-2" %}
+                      {% endif %}
+                        {% show_form_input_field form.customer_remark "" %}
+                        {% show_form_input_field form.company_remark "" %}
+                    </div>
+                    <div class="row">
+                        <div class="col-6 col-sm-4 col-md-2">
+                            <p>
+                                <b>Total Paid Now:</b>
+                                <span class="total-fee"><span id="_fee_now">0</span></span>
+                            </p>
+                        </div>
+                        <div class="col-6 col-sm-4 col-md-3">
+                            <p>
+                                <b>Amount Due on Pickup:</b>
+                                <span class="total-fee"><span id="_fee_dst">0</span></span>
+                            </p>
+                        </div>
+                    </div>
+                  {# The waybill detail page does not provide a submit button #}
+                  {% if not detail_view %}
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                  {% endif %}
+                </fieldset>
+            </form>
+              {% block content_footer %}{% endblock %}
+          {% endblock %}

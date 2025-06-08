@@ -1,0 +1,119 @@
+{% extends "wuliu/waybill/_layout_edit_waybill.html" %}
+{% load show_waybill_routing_operation_info from wuliu_extras %}
+{% block title %}Waybill Details{% endblock %}
+{% block header_title %}Waybill Details{% endblock %}
+        {% block content_header %}
+        <div class="col"><div class="card card-primary card-tabs">
+          {% if wb.status == WB_STATUSES.SignedFor %}
+          <div class="ribbon-wrapper ribbon-xl">
+            <div class="ribbon bg-success text-xl">Signed</div>
+          </div>
+          {% elif wb.status == WB_STATUSES.Returned %}
+          <div class="ribbon-wrapper ribbon-xl">
+            <div class="ribbon bg-warning text-xl">Returned</div>
+          </div>
+          {% elif wb.status == WB_STATUSES.Dropped %}
+          <div class="ribbon-wrapper ribbon-xl">
+            <div class="ribbon bg-danger text-xl">Voided</div>
+          </div>
+          {% endif %}
+          <div class="card-header p-0 pt-1">
+            <ul class="nav nav-tabs" role="tablist">
+              <li class="nav-item">
+                <a class="nav-link active" id="tabs-waybill-info-tab" data-toggle="pill" href="#tabs-waybill-info" role="tab" aria-controls="tabs-waybill-info" aria-selected="true">Waybill Info</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" id="tabs-waybill-routing-tab" data-toggle="pill" href="#tabs-waybill-routing" role="tab" aria-controls="tabs-waybill-routing" aria-selected="false">Waybill Routing</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" id="tabs-waybill-cargo-price-tab" data-toggle="pill" href="#tabs-waybill-cargo-price" role="tab" aria-controls="tabs-waybill-cargo-price" aria-selected="false">COD Status</a>
+              </li>
+            </ul>
+          </div>
+          <div class="card-body">
+            <div class="tab-content" id="custom-tabs-one-tabContent">
+              <div class="tab-pane fade show active" id="tabs-waybill-info" role="tabpanel" aria-labelledby="tabs-waybill-info-tab">
+              </div>
+            </div>
+          </div>
+        </div></div>
+        {% endblock %}
+        {# Waybill details here #}
+        {% block content_footer %}
+              </div>
+              <div class="tab-pane fade" id="tabs-waybill-routing" role="tabpanel" aria-labelledby="tabs-waybill-routing-tab">
+                <div class="table-responsive" style="border: 1px solid #bbb; height: 400px;">
+                  <table class="table table-bordered table-hover">
+                    <thead>
+                      <tr class="thead-light">
+                        <th>#</th>
+                        <th>Operation Time</th>
+                        <th>Operation Type</th>
+                        <th>Operation Department</th>
+                        <th>Operation User</th>
+                        <th>Details</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for rt in wb_routing %}
+                      <tr>
+                        <th>{{ forloop.counter }}</th>
+                        <td>{{ rt.time | date:"Y-m-d H:i:s" }}</td>
+                        <td>{{ rt.get_operation_type_display }}</td>
+                        <td>{{ rt.operation_dept.name }}</td>
+                        <td>{{ rt.operation_user.name }}</td>
+                        <td>{% show_waybill_routing_operation_info rt %}</td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="tab-pane fade" id="tabs-waybill-cargo-price" role="tabpanel" aria-labelledby="tabs-waybill-cargo-price-tab">
+                {% if wb.cargo_price > 0 %}
+                <blockquote>
+                  <h1>COD Information</h1>
+                  <p>
+                    COD Amount: <code>{{ wb.cargo_price }}</code> yuan;
+                    Deducted Freight: <code>{% if wb.fee_type == WB_FEE_TYPES.Deduction %}{{ wb.fee }}{% else %}0{% endif %}</code> yuan;
+                    Handling Fee Deducted: <code>{{ wb.cargo_handling_fee }}</code> yuan;
+                    Actual Amount Received: <code>{{ wb_final_cpp_fee }}</code> yuan.
+                  </p>
+                </blockquote>
+                <blockquote>
+                  <h1>Current COD Status: {{ wb.get_cargo_price_status_display }}</h1>
+                  <p>
+                  {% with wb_cpp=wb.cargo_price_payment %}
+                    {% if wb_cpp %}
+                      <a href="{% url 'wuliu:detail_cargo_price_payment' wb_cpp.id %}">COD Transfer Order</a>
+                    {% if wb_cpp.status == CPP_STATUSES.Created %}Created by {{ wb_cpp.create_user.name }}, not yet submitted.
+                    {% elif wb_cpp.status == CPP_STATUSES.Submitted %}Created by {{ wb_cpp.create_user.name }} and submitted to Finance, awaiting review.
+                    {% elif wb_cpp.status == CPP_STATUSES.Reviewed %}Reviewed by Finance.
+                    {% elif wb_cpp.status == CPP_STATUSES.Paid %}Payment completed by Finance, settlement time: {{ wb_cpp.settle_accounts_time | date:"Y年n月j日 H:i:s" }}.
+                    {% elif wb_cpp.status == CPP_STATUSES.Rejected %}Rejected by Finance.
+                    {% endif %}
+                    {% else %}
+                    {% if wb.status == WB_STATUSES.SignedFor %}COD transfer order not yet created.
+                    {% else %}Waybill not signed, cannot create COD transfer order.
+                    {% endif %}
+                    {% endif %}
+                  {% endwith %}
+                  </p>
+                </blockquote>
+                {% else %}
+                <blockquote>
+                  <h1>Current COD Status: {{ wb.get_cargo_price_status_display }}</h1>
+                  <p>This waybill has no COD amount.</p>
+                </blockquote>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div></div>
+        <script>
+$(function() {
+  $(".container-fluid > .card").removeClass("card").removeClass("p-3");
+  $(".ribbon-wrapper").click(function(){$(this).slideUp()});
+});
+        </script>
+        {% endblock %}

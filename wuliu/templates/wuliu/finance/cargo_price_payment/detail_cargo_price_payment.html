@@ -1,0 +1,16 @@
+{% extends "wuliu/finance/cargo_price_payment/_layout_edit_cargo_price_payment.html" %}
+{% block title %}COD Transfer Order Details{% endblock %}
+{% block header_title %}COD Transfer Order Details{% endblock %}
+{% block head_append_js %}{% endblock %}
+{% block form_action %}{% endblock %}
+        {% block action_bar %}
+        <blockquote>
+          <h1>Amount to be Transferred</h1>
+          <p>
+            Total COD Amount: <code>{{ cpp_dic.total_cargo_price }}</code> yuan;
+            Total Deducted Freight: <code>{{ cpp_dic.total_deduction_fee }}</code> yuan;
+            Total Handling Fee Deducted: <code>{{ cpp_dic.total_cargo_handling_fee }}</code> yuan;
+            Total: <code>{{ cpp_dic.final_fee }}</code> yuan.
+          </p>
+        </blockquote>
+        {% endblock %}

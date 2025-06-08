@@ -1,0 +1,97 @@
+{% extends "wuliu/_layout.html" %}
+{% load cache %}
+{% load wuliu_extras %}
+{% block title %}User Permission Management{% endblock %}
+{% block header_title %}User Permission Management{% endblock %}
+      {% block content %}
+      <form action="{% url 'wuliu:manage_user_permission' %}" id="form-manage_user_permission" class="form col-12" method="post">
+        {% csrf_token %}
+        <fieldset>
+          <legend class="row">User</legend>
+          <div class="row align-items-end">
+            {% show_form_input_field form.user "Select User" "col col-md-3" %}
+            <div class="col col-md-2">
+              <button class="btn btn-primary mr-2" id="button_commit" style="margin-bottom: 0.125rem;">Save</button>
+            </div>
+            {% show_form_input_field form.permission %}
+            {% show_form_input_field form.permission_source_user %}
+          </div>
+          <legend class="row">Permission</legend>
+        </fieldset>
+      </form>
+      <div class="col-12 col-md-6">
+        <a class="btn btn-primary mr-2" href="{% url 'wuliu:batch_edit_user_permission' %}">Batch Edit User Permissions</a>
+        <button class="btn btn-primary" id="button-select_src_perm_user">Copy Permissions</button>
+        {% cache 300 "full_permission_tree" %}
+        {% show_full_permission_tree "permission_tree" %}
+        {% endcache %}
+      </div>
+<script>
+$(document).ready(function() {
+  $("#form-manage_user_permission [name='user']").change(function() {
+  let user_id = $(this).val();
+  for (let checkbox of $("#permission_tree input:checkbox:checked")) {
+    checkbox.click();
+  }
+  if (user_id) {
+    $.getJSON("{% url 'wuliu:api_get_user_permission' %}?user_id=" + user_id, function(result) {
+    for (let perm_name of result.data.perms) {
+      $("#" + perm_name + "_checkbox").click();
+    }
+    });
+  }
+  });
+  $("#button-select_src_perm_user").click(function() {
+  if (! $("#form-manage_user_permission [name='user']").val()) {
+    mdtoast_error("You have not selected any user.");
+    return;
+  }
+  new duDialog(
+    "Copy this user's permissions",
+    [
+    {% for user in form.fields.user.queryset %}
+      { name: "{{ user }}", id: "{{ user.id }}", short_name: "{{ user.name }}"},
+    {% endfor %}
+    ],
+    {
+    selection: true,
+    textField: 'name',
+    valueField: 'id',
+    callbacks: {
+      itemSelect: function(e, i){
+      if (i.id === $("#form-manage_user_permission [name='user']").val()) {
+        mdtoast_error("The selected user cannot be the same.");
+        return;
+      }
+      confirm_dialog(
+        "Confirm Copy",
+        "Are you sure you want to copy " + i.short_name + "'s permissions to this user?",
+        {
+        okClick: function() {
+          this.hide();
+          $("#form-manage_user_permission [name='permission_source_user']").val(i.id);
+          $("#form-manage_user_permission").submit();
+        }
+        }
+      );
+      }
+    },
+    },
+  );
+  });
+  $("#button_commit").click(function(e) {
+  if (! $("#form-manage_user_permission [name='user']").val()) {
+    mdtoast_error("You have not selected any user.");
+    e.preventDefault()
+    return;
+  }
+  let permission_list = [];
+  for (let checkbox of $("#permission_tree input:checkbox:checked[data-is_group='0']")) {
+    permission_list.push($(checkbox).attr("data-select_value"));
+  }
+  $("#form-manage_user_permission [name='permission']").val(permission_list);
+  $("#form-manage_user_permission").submit();
+  })
+});
+</script>
+      {% endblock %}

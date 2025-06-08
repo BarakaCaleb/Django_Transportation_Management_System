@@ -1,0 +1,9 @@
+{% extends "wuliu/_layout.html" %}
+{% load wuliu_extras %}
+{% block title %}Search Results{% endblock %}
+{% block header_title %}Search Results{% endblock %}
+{% block content %}
+  {% show_waybill_table waybill_list "quick_search_waybill_result" False %}
+  <!-- Remove the outermost card border -->
+  <script>$(function() {$(".container-fluid > .card").removeClass("card").removeClass("p-3");});</script>
+{% endblock %}

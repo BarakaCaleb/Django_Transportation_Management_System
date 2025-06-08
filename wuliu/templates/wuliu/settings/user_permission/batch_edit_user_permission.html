@@ -1,0 +1,56 @@
+{% extends "wuliu/_layout.html" %}
+{% load static %}
+{% load cache %}
+{% load wuliu_extras %}
+{% block title %}Batch Edit User Permissions{% endblock %}
+{% block header_title %}Batch Edit User Permissions{% endblock %}
+{% block head_append_js %}
+  <script src="{% static 'AdminLTE-3.0.5/plugins/bootstrap-switch/js/bootstrap-switch.min.js' %}"></script>
+{% endblock %}
+          {% block content %}
+            <form action="{% url 'wuliu:batch_edit_user_permission' %}" id="form-batch_edit_user_permission" class="form col-12" method="post">
+                {% csrf_token %}
+                <fieldset>
+                    <legend class="row">Users</legend>
+                    <div class="row align-items-end">
+                      {% show_form_input_field form.user "Select Users" "col col-md-4" %}
+                        <div class="col col-md-2">
+                            <button class="btn btn-primary mr-2" id="button_commit" style="margin-bottom: 0.125rem;">Confirm</button>
+                        </div>
+                      {{ form.permission.as_hidden }}
+                    </div>
+                    <legend class="row">Permissions</legend>
+                    {{ form.grant_or_deny }} <span class="ml-1">The following permissions:</span>
+                </fieldset>
+            </form>
+            <div class="col-12 col-md-6">
+              {% cache 300 "full_permission_tree" %}
+                {% show_full_permission_tree "permission_tree" %}
+              {% endcache %}
+            </div>
+<script>
+$(document).ready(function() {
+  $("input[data-bootstrap-switch]").each(function() {
+    $(this).bootstrapSwitch();
+  });
+  $("#button_commit").click(function(e) {
+    if ($("#form-batch_edit_user_permission [name='user']").val().length === 0) {
+      mdtoast_error("You have not selected any users.");
+      e.preventDefault()
+      return;
+    }
+    let permission_list = [];
+    for (let checkbox of $("#permission_tree input:checkbox:checked[data-is_group='0']")) {
+      permission_list.push($(checkbox).attr("data-select_value"));
+    }
+    if (permission_list.length === 0) {
+      mdtoast_error("You have not selected any permissions.");
+      e.preventDefault()
+      return;
+    }
+    $("#form-batch_edit_user_permission [name='permission']").val(permission_list);
+    $("#form-batch_edit_user_permission").submit();
+  })
+});
+</script>
+          {% endblock %}

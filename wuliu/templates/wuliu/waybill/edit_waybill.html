@@ -1,0 +1,4 @@
+{% extends "wuliu/waybill/_layout_edit_waybill.html" %}
+{% block title %}Waybill Edit{% endblock %}
+{% block header_title %}Waybill Edit{% endblock %}
+{% block edit_form_action %}{% url 'wuliu:edit_waybill' waybill.id %}{% endblock %}

@@ -1,0 +1,88 @@
+/* Inline code */
+code {
+  color: #2d85ca;
+  padding: 2px 4px;
+  font-size: 90%;
+  background-color: #f0f3f3;
+  border-radius: 4px;
+  font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+/* Add a red asterisk before required form label text */
+.label-required:before {
+  content: "* ";
+  color: #eb4434;
+}
+/* Limit the maximum height of textarea and disable width resizing */
+textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+/* Total price in waybill information */
+.total-fee:before {
+  content: "￥ ";
+}
+.total-fee {
+  font-size: 16px;
+  color: #eb4434;
+  font-weight: 700;
+}
+/* Prevent table content from wrapping */
+.table th, .table td {
+  white-space: nowrap;
+}
+/* Adjust vertical padding for form labels */
+form label {
+  margin-top: .25rem;
+  margin-bottom: .25rem;
+}
+/* Slightly reduce legend font size and adjust vertical margins */
+legend {
+  margin-top: .15rem;
+  margin-bottom: .25rem;
+  font-size: 1.25rem;
+}
+/* Align child elements */
+.child-flex {
+  display: flex;
+}
+.child-flex-xc {
+  justify-content: center;
+}
+.child-flex-xr {
+  justify-content: right;
+}
+.child-flex-yc {
+  align-items: center;
+}
+/* Custom adjustments for RemixIcon */
+.ri-c {
+  line-height: 1;  /* Fixed line height */
+  vertical-align: text-bottom;  /* Align to bottom */
+  font-size: 125%;  /* Slightly larger (5/4) */
+}
+.ri-c span {
+  font-size: 80%;  /* Shrink to match icon size (4/5) */
+  vertical-align: text-top;
+  padding-left: .25rem;
+}
+/* User avatar */
+.nav-user-icon {
+  margin-right: .25rem;
+  width: 2.125rem;
+}
+/* Some layout adjustments for user permission tree elements */
+.tree-pl {
+  padding-left: 2.75rem;
+}
+.tree-icon-pl {
+  padding-right: 1.75rem;
+}
+.permission-padding-fix {
+  padding-left: 1.15rem;
+}
+.custom-checkbox-label-fix::before {
+  top: .125rem;
+}
+.custom-checkbox-label-fix::after {
+  top: .125rem;
+}

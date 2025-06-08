@@ -1,0 +1,66 @@
+{% extends "wuliu/_layout.html" %}
+{% load wuliu_extras %}
+{% block head_append_js %}
+  <script src="{% url 'wuliu:edit_transport_out_js' %}"></script>
+{% endblock %}
+      {% block content %}
+      <form class="form col-12 mb-2" id="form-edit_transport_out" method="post">
+        <fieldset>
+          {% if not detail_view %}
+          {% csrf_token %}
+          {% endif %}
+          <legend class="row">Basic Information</legend>
+          {% if form.id_ %}
+          <div class="row">
+            {% show_form_input_field form.id_ "" "col-6 col-md-3" %}
+            {% show_form_input_field form.id "" "" %}
+            {% if detail_view %}
+            {% show_form_input_field form.RO_status "" "col-6 col-md-2" %}
+            {% show_form_input_field form.RO_create_time %}
+            {% show_form_input_field form.RO_start_time %}
+            {% show_form_input_field form.RO_end_time %}
+            {% endif %}
+          </div>
+          {% endif %}
+          <div class="row">
+            {% if detail_view %}
+            {% show_form_input_field form.RO_src_department "Departure Department" "col-6 col-md-3" %}
+            {% show_form_input_field form.RO_dst_department "Arrival Department" "col-6 col-md-3" %}
+            {% else %}
+            {% show_form_input_field form.src_department "Departure Department" "col-6 col-md-3" %}
+            {% show_form_input_field form.dst_department "Arrival Department" "col-6 col-md-3" %}
+            {% endif %}
+          </div>
+          <legend class="row">Trip Information</legend>
+          <div class="row">
+            {% if detail_view %}
+            {% show_form_input_field form.RO_truck "License Plate" "col-12 col-md-3" %}
+            {% else %}
+            {% show_form_input_field form.truck "Select Vehicle" "col-12 col-md-3" %}
+            {% endif %}
+            {% show_form_input_field form.driver_name "" "col-6 col-md-3" %}
+            {% show_form_input_field form.driver_phone "" "col-6 col-md-3" %}
+          </div>
+          {# This form field should not be rendered here #}
+          {# form.waybills #}
+        </fieldset>
+      </form>
+      <div class="col-12 mb-2">
+        {% block action_bar %}
+        <a class="btn btn-outline-primary btn-sm" href="{% url 'wuliu:search_waybills_to_transport_out' %}">
+          <i class="ri-c ri-add-fill"><span>Assign Waybill</span></i>
+        </a>
+        <button class="btn btn-outline-primary btn-sm" id="button_wb_remove">
+          <i class="ri-c ri-delete-bin-line"><span>Delete</span></i>
+        </button>
+        {% endblock %}
+      </div>
+      <div class="col-12">
+        {% block waybill_table %}
+        {% show_waybill_table waybills_info_list "ready_transport_out" %}
+        {% endblock %}
+      </div>
+      <div class="col-12">
+        {% block action_buttons %}{% endblock %}
+      </div>
+      {% endblock %}

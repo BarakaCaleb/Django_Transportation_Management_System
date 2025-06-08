@@ -1,0 +1,58 @@
+{% extends "wuliu/waybill/_layout_search_waybill.html" %}
+{% block title %}Customer Sign For{% endblock %}
+{% block header_title %}Customer Sign For{% endblock %}
+{% block header_subtitle %}Please search and select the waybill(s) the customer needs to sign for{% endblock %}
+        {% block search_form_action %}{% url 'wuliu:manage_sign_for' %}{% endblock %}
+        {% block action_bar %}
+        <button class="btn btn-outline-primary btn-sm" id="wb_confirm_sign_for">
+          <i class="ri-c ri-archive-line"><span>Confirm Sign For</span></i>
+        </button>
+        <button class="btn btn-outline-primary btn-sm" id="wb_return">
+          <i class="ri-c ri-arrow-go-back-line"><span>Return</span></i>
+        </button>
+        <button class="btn btn-outline-primary btn-sm" id="wb_reprint">
+          <i class="ri-c ri-printer-line"><span>Reprint Delivery Note</span></i>
+        </button>
+        <script>
+$(document).ready(function() {
+  $("#wb_confirm_sign_for").click(function() {
+  let checked_waybills = find_datatable_rows_clicked(wb_search_result_table);
+  if (checked_waybills.length === 0) {
+    mdtoast_error("Please select at least one waybill.");
+    return;
+  }
+  for (let jq_obj of checked_waybills.toArray()) {
+    if (jq_obj.find("[data-status_id]").attr("data-status_id") != "{{ WB_STATUSES.Arrived }}") {
+    mdtoast_error("Only waybills that have not been picked up can be selected.");
+    return;
+    }
+    if (jq_obj.find("[data-dst_dept_id]").attr("data-dst_dept_id") != "{{ request.session.user.department_id }}") {
+    mdtoast_error("Cross-department waybill operations are not allowed.");
+    return;
+    }
+  }
+  let sign_for_waybill_ids = checked_waybills.map(function(jq_obj) {
+    return jq_obj.find("[data-wb_id]").attr("data-wb_id");
+  });
+  window.location.replace("{% url 'wuliu:confirm_sign_for' %}?sign_for_waybill_ids=" + sign_for_waybill_ids.join(","));
+  });
+  $("#wb_return").click(function() {
+  let checked_waybill = find_datatable_rows_clicked(wb_search_result_table);
+  if (checked_waybill.length !== 1) {
+    mdtoast_error("Please select one waybill.");
+    return;
+  }
+  checked_waybill = checked_waybill[0];
+  if (checked_waybill.find("[data-dst_dept_id]").attr("data-dst_dept_id") != "{{ request.session.user.department_id }}") {
+    mdtoast_error("Cross-department waybill operations are not allowed.");
+    return;
+  }
+  if (checked_waybill.find("[data-status_id]").attr("data-status_id") != "{{ WB_STATUSES.Arrived}}") {
+    mdtoast_error("Only waybills that have not been picked up can be returned.");
+    return;
+  }
+  window.location.replace("{% url 'wuliu:confirm_return_waybill' %}?waybill_id=" + checked_waybill.find("[data-wb_id]").attr("data-wb_id"));
+  });
+});
+        </script>
+        {% endblock %}
