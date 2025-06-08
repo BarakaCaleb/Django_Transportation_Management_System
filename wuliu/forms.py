@@ -43,7 +43,7 @@ from django.utils import timezone
 
 # Import get_global_settings from the appropriate module
 # If utils.py is in the same directory as forms.py
-from utils import get_global_settings, get_logged_user  # Adjust the import path as needed
+from wuliu.common import get_global_settings, get_logged_userr  # Adjust the import path as needed
 
 from .models import Waybill, Department  # Import Waybill and Department models from the current app's models
 
@@ -77,7 +77,7 @@ class WaybillForm(_ModelFormBase):
             return math.ceil(cargo_price * get_global_settings().handling_fee_ratio)
 
         form_dic = self.cleaned_data
-        logged_user = get_logged_user(request)
+        logged_user = get_logged_userr(request)
         _handling_fee = _gen_handling_fee(form_dic["cargo_price"])
         custom_validators = [
             # Shipping department must match the department of the logged-in user

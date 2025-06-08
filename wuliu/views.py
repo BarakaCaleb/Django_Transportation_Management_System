@@ -12,10 +12,11 @@ import datetime
 from . import forms
 import sys
 import os
-from utils import get_logged_user_type, is_logged_user_has_perm  # Ensure 'wuliu/utils.py' exists and contains these functions
+from wuliu.common import get_logged_user_type, is_logged_user_has_perm  # Ensure 'wuliu/utils.py' exists and contains these functions
 from .models import Waybill, TransportOut, User  # Add this import for Waybill, TransportOut, and User models
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils import get_logged_user_type, is_logged_user_has_perm  # Adjusted import for utils outside the app directory
+
 
 
 class WaybillSearchView(View):
