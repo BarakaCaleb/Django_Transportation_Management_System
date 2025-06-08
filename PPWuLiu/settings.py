@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     # Optional debug toolbar
     'debug_toolbar' if True else '',
     # Add your app(s) here, e.g., 'transport',
+    'wuliu',
 ]
 
 # Middleware

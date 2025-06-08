@@ -12,7 +12,10 @@ from django.template.loader import render_to_string
 from django.utils.functional import cached_property
 from django.utils.html import strip_tags
 
-from utils.common import UnescapedDjangoJSONEncoder, ExpireLruCache
+from utils.common.expire_lru_cache import ExpireLruCache
+
+from django.core.serializers.json import DjangoJSONEncoder
+
 
 
 def _validate_handling_fee_ratio(value):
@@ -536,7 +539,7 @@ class WaybillRouting(models.Model):
     operation_type = models.SmallIntegerField("Operation Type", choices=Waybill.Statuses.choices)
     operation_dept = models.ForeignKey(Department, verbose_name="Operation Department", on_delete=models.PROTECT)
     operation_user = models.ForeignKey(User, verbose_name="Operation User", on_delete=models.PROTECT)
-    operation_info = models.JSONField("Details", encoder=UnescapedDjangoJSONEncoder, default=dict)
+    operation_info = models.JSONField("Details", encoder=DjangoJSONEncoder, default=dict)
 
     class Meta:
         verbose_name = "Waybill Routing"
