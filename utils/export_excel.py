@@ -1,3 +1,20 @@
+from openpyxl import Workbook
+from openpyxl.styles import Border, Side, Alignment, Font
+from openpyxl.writer.excel import save_virtual_workbook
+import itertools
+
+# Define commonly used fonts
+_FONT_TITLE = Font(size=14, bold=True)
+_FONT_HEADER = Font(size=12, bold=True)
+_FONT_VALUE = Font(size=11)
+
+# Define commonly used alignments
+_CENTER = Alignment(horizontal='center', vertical='center')
+_RIGHT = Alignment(horizontal='right', vertical='center')
+
+# Define commonly used border style
+_BD = Side(style='thin')
+
 def add_all_border(cell_):
     """ Add thin border to all sides of the cell """
     cell_.border = Border(left=_BD, top=_BD, right=_BD, bottom=_BD)

@@ -2,6 +2,7 @@ from django.urls import path, include
 
 from . import views, apis
 
+
 # Unused
 def easy_path(view_func):
     """ Only need to provide the view function, route and name are set to the function's name """

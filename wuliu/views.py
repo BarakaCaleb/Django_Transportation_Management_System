@@ -1,4 +1,22 @@
 # ... (imports and unchanged code above)
+from django.views import View
+from django.shortcuts import render, redirect, get_object_or_404
+from django.conf import settings
+from django.contrib import messages
+from django.utils import timezone
+from django.http import HttpResponseForbidden, HttpResponseBadRequest
+from django.contrib.auth.hashers import check_password
+from django.contrib.auth.decorators import login_required
+from django.db.models import Count, Sum
+import datetime
+from . import forms
+import sys
+import os
+from utils import get_logged_user_type, is_logged_user_has_perm  # Ensure 'wuliu/utils.py' exists and contains these functions
+from .models import Waybill, TransportOut, User  # Add this import for Waybill, TransportOut, and User models
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils import get_logged_user_type, is_logged_user_has_perm  # Adjusted import for utils outside the app directory
+
 
 class WaybillSearchView(View):
 
@@ -147,10 +165,10 @@ def welcome(request):
         "wait": {"waybill": 0, "transport_out": 0, "arrival": 0, "sign_for": 0},
     }
     today_start_datetime = timezone.make_aware(
-        timezone.datetime.combine(datetime_.date.today(), datetime_.time(0, 0))
+        datetime.datetime.combine(datetime.date.today(), datetime.time(0, 0))
     )
     today_end_datetime = timezone.make_aware(
-        timezone.datetime.combine(datetime_.date.today(), datetime_.time(23, 59, 59))
+        datetime.datetime.combine(datetime.date.today(), datetime.time(23, 59, 59))
     )
     today_weekday = timezone.now().isoweekday()
     weekdays = [
@@ -180,6 +198,12 @@ def welcome(request):
     # Today's new waybills
     dic["today"]["waybill"] = waybill_num_in_past_two_weeks[-1]
     # Today's departures
+    today_start_datetime = timezone.make_aware(
+        datetime.datetime.combine(datetime.date.today(), datetime.time(0, 0))
+    )
+    today_end_datetime = timezone.make_aware(
+        datetime.datetime.combine(datetime.date.today(), datetime.time(23, 59, 59))
+    )
     today_transport_out = TransportOut.objects.filter(
         start_time__gte=today_start_datetime,
         start_time__lte=today_end_datetime,

@@ -39,7 +39,7 @@ MIDDLEWARE = [
     'debug_toolbar.middleware.DebugToolbarMiddleware' if True else '',
 ]
 
-ROOT_URLCONF = 'PPWuliu.urls'
+ROOT_URLCONF = 'PPWuLiu.urls'
 
 TEMPLATES = [
     {
@@ -57,7 +57,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'PPWuliu.wsgi.application'
+WSGI_APPLICATION = 'PPWuLiu.wsgi.application'
 
 # Database configuration
 DATABASES = {

@@ -1,3 +1,6 @@
+from django import forms
+import math
+
 def _init_form_fields_class(self_: forms.BaseForm):
     """ Set styles for all form fields """
     for field in self_.fields.values():
@@ -22,12 +25,41 @@ def _destroy_model_form_save(self_: forms.ModelForm):
         raise NotImplemented
     self_.save = save_
 
+class _FormBase(forms.Form):
+    """Base form class for custom forms."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _init_form_fields_class(self)
+
 class ChangePassword(_FormBase):
     old_password = forms.CharField(label="Old Password", widget=forms.PasswordInput)
     new_password = forms.CharField(label="New Password", widget=forms.PasswordInput)
     new_password_again = forms.CharField(label="Re-enter New Password", widget=forms.PasswordInput)
 
 # ... (snip, only showing changed labels below for brevity)
+
+from django.forms import ModelForm
+from django.utils import timezone
+
+# Import get_global_settings from the appropriate module
+# If utils.py is in the same directory as forms.py
+from utils import get_global_settings, get_logged_user  # Adjust the import path as needed
+
+from .models import Waybill, Department  # Import Waybill and Department models from the current app's models
+
+# Define DEPARTMENT_GROUP_CHOICES if not already defined elsewhere
+DEPARTMENT_GROUP_CHOICES = {
+    0: "All",
+    1: "Group 1",
+    2: "Group 2",
+    # Add more groups as needed
+}
+
+class _ModelFormBase(ModelForm):
+    """Base model form class for custom model forms."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _init_form_fields_class(self)
 
 class WaybillForm(_ModelFormBase):
 
